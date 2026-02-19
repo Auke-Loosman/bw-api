@@ -59,6 +59,9 @@ final class MessageController
             fn (Message $message) => [
                 'id' => $message->getId(),
                 'subject' => $message->getSubject(),
+                'message' => $message->getMessage(),
+                'date' => $message->getDate()->format('Y-m-d H:i:s'),
+                'senderName' => $message->getSenderName(),
                 'type' => $message->getType(),
             ],
             $messages
