@@ -50,4 +50,23 @@ final class MessageController
 
         return new JsonResponse($data);
     }
+
+    #[Route('/api/messages/{id}', name: 'app_message_show', methods: ['GET'])]
+    public function show(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $message = $em->getRepository(Message::class)->find($id);
+
+        if (!$message) {
+            return new JsonResponse(null, 404);
+        }
+
+        return new JsonResponse([
+            'id' => $message->getId(),
+            'subject' => $message->getSubject(),
+            'message' => $message->getMessage(),
+            'date' => $message->getDate()->format('Y-m-d H:i:s'),
+            'senderName' => $message->getSenderName(),
+            'type' => $message->getType(),
+        ]);
+    }
 }
