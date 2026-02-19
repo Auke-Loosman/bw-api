@@ -28,13 +28,16 @@ final class ProcessMessagesCommand extends Command
     {
         $messages = $this->service->findAll();
 
+        $processedCount = 0;
+
         foreach ($messages as $message) {
             if ($message->getProcessedAt() === null) {
                 $this->service->process($message);
+                $processedCount++;
             }
         }
 
-        $output->writeln('Messages processed.');
+        $output->writeln(sprintf('%d messages processed.', $processedCount));
 
         return Command::SUCCESS;
     }

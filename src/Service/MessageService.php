@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Entity\Message;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Registry\MessageHandlerRegistry;
+use Doctrine\ORM\EntityRepository;
 
 final class MessageService
 {
@@ -14,6 +15,11 @@ final class MessageService
         private readonly EntityManagerInterface $em,
         private readonly MessageHandlerRegistry $registry
     ) {}
+
+    private function repository(): EntityRepository
+    {
+        return $this->em->getRepository(Message::class);
+    }
 
     public function process(Message $message): void
     {
@@ -24,6 +30,7 @@ final class MessageService
     public function create(array $data): Message
     {
         $message = new Message();
+
         $message->setSubject($data['subject']);
         $message->setMessage($data['message']);
         $message->setDate(new \DateTimeImmutable($data['date']));
@@ -38,12 +45,12 @@ final class MessageService
 
     public function findAll(): array
     {
-        return $this->em->getRepository(Message::class)->findAll();
+        return $this->repository()->findAll();
     }
 
     public function find(int $id): ?Message
     {
-        return $this->em->getRepository(Message::class)->find($id);
+        return $this->repository()->find($id);
     }
 
     public function update(Message $message, array $data): Message
