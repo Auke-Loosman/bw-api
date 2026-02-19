@@ -173,4 +173,36 @@ final class MessageApiTest extends WebTestCase
 
         $this->assertSame('Updated', $message->getSubject());
     }
+
+    public function testDeleteMessage(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/messages',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'subject' => 'To Delete',
+                'message' => 'Delete me',
+                'date' => '2025-01-01 10:00:00',
+                'senderName' => 'John',
+                'type' => 'incoming'
+            ])
+        );
+
+        $created = json_decode($this->client->getResponse()->getContent(), true);
+        $id = $created['id'];
+
+        $this->client->request('DELETE', '/api/messages/' . $id);
+
+        $this->assertResponseStatusCodeSame(204);
+
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
+        $message = $entityManager
+            ->getRepository(\App\Entity\Message::class)
+            ->find($id);
+
+        $this->assertNull($message);
+    }
 }
