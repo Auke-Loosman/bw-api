@@ -95,4 +95,19 @@ final class MessageController
             'type' => $message->getType(),
         ]);
     }
+
+    #[Route('/api/messages/{id}', name: 'app_message_delete', methods: ['DELETE'])]
+    public function delete(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $message = $em->getRepository(Message::class)->find($id);
+
+        if (!$message) {
+            return new JsonResponse(null, 404);
+        }
+
+        $em->remove($message);
+        $em->flush();
+
+        return new JsonResponse(null, 204);
+    }
 }
