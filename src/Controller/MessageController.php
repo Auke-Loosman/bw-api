@@ -9,11 +9,14 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Message;
 use App\Service\MessageService;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\DTO\MessageInput;
 
 final class MessageController
 {
     public function __construct(
-        private readonly MessageService $service
+        private readonly MessageService $service,
+        private readonly ValidatorInterface $validator
     ) {}
 
     #[Route('/api/messages', name: 'app_message_create', methods: ['POST'])]
@@ -21,7 +24,24 @@ final class MessageController
     {
         $data = json_decode($request->getContent(), true);
 
-        $message = $this->service->create($data);
+        $input = new MessageInput();
+        $input->subject = $data['subject'] ?? '';
+        $input->message = $data['message'] ?? '';
+        $input->date = $data['date'] ?? '';
+        $input->senderName = $data['senderName'] ?? '';
+        $input->type = $data['type'] ?? '';
+
+        $errors = $this->validator->validate($input);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+            return new JsonResponse(['errors' => $errorMessages], 400);
+        }
+
+        $message = $this->service->createFromDto($input);
 
         return new JsonResponse([
             'id' => $message->getId(),

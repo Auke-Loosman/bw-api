@@ -8,6 +8,7 @@ use App\Entity\Message;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Registry\MessageHandlerRegistry;
 use Doctrine\ORM\EntityRepository;
+use App\DTO\MessageInput;
 
 final class MessageService
 {
@@ -27,15 +28,15 @@ final class MessageService
         $this->em->flush();
     }
 
-    public function create(array $data): Message
+    public function createFromDto(MessageInput $input): Message
     {
         $message = new Message();
 
-        $message->setSubject($data['subject']);
-        $message->setMessage($data['message']);
-        $message->setDate(new \DateTimeImmutable($data['date']));
-        $message->setSenderName($data['senderName']);
-        $message->setType($data['type']);
+        $message->setSubject($input->subject);
+        $message->setMessage($input->message);
+        $message->setDate(new \DateTimeImmutable($input->date));
+        $message->setSenderName($input->senderName);
+        $message->setType($input->type);
 
         $this->em->persist($message);
         $this->em->flush();
