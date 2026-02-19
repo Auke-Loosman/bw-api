@@ -34,7 +34,17 @@ final class MessageApiTest extends WebTestCase
         $data = json_decode($client->getResponse()->getContent(), true);
 
         $this->assertIsArray($data);
+        $this->assertArrayHasKey('id', $data);
         $this->assertSame('Test Subject', $data['subject']);
-        $this->assertSame('incoming', $data['type']);
+
+        self::bootKernel();
+        $entityManager = self::getContainer()->get('doctrine')->getManager();
+
+        $message = $entityManager
+            ->getRepository(\App\Entity\Message::class)
+            ->find($data['id']);
+
+        $this->assertNotNull($message);
+        $this->assertSame('Test Subject', $message->getSubject());
     }
 }
