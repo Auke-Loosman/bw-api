@@ -92,4 +92,36 @@ final class MessageApiTest extends WebTestCase
         $this->assertCount(1, $data);
         $this->assertSame('Message 1', $data[0]['subject']);
     }
+
+        public function testGetSingleMessage(): void
+    {
+
+        $this->client->request(
+            'POST',
+            '/api/messages',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'subject' => 'Single Message',
+                'message' => 'Test',
+                'date' => '2025-01-01 10:00:00',
+                'senderName' => 'John',
+                'type' => 'incoming'
+            ])
+        );
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $id = $data['id'];
+
+        // Now fetch it by ID
+        $this->client->request('GET', '/api/messages/' . $id);
+
+        $this->assertResponseIsSuccessful();
+
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame($id, $responseData['id']);
+        $this->assertSame('Single Message', $responseData['subject']);
+    }
 }
