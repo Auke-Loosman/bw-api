@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Api;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\CommandTester;
 
 final class MessageApiTest extends WebTestCase
 {
@@ -204,5 +206,75 @@ final class MessageApiTest extends WebTestCase
             ->find($id);
 
         $this->assertNull($message);
+    }
+
+    public function testMessageIsNotProcessedOnCreate(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/messages',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'subject' => 'Not processed yet',
+                'message' => 'Test',
+                'date' => '2025-01-01 10:00:00',
+                'senderName' => 'John',
+                'type' => 'incoming'
+            ])
+        );
+
+        $this->assertResponseStatusCodeSame(201);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $id = $data['id'];
+
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
+
+        $message = $entityManager
+            ->getRepository(\App\Entity\Message::class)
+            ->find($id);
+
+        $this->assertNotNull($message);
+        $this->assertNull($message->getProcessedAt());
+    }
+
+    public function testProcessCommandProcessesMessages(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/messages',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'subject' => 'Process me',
+                'message' => 'Test',
+                'date' => '2025-01-01 10:00:00',
+                'senderName' => 'John',
+                'type' => 'incoming'
+            ])
+        );
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $id = $data['id'];
+
+        $application = new Application(static::$kernel);
+        $application->setAutoExit(false);
+
+        $command = $application->find('app:process-messages');
+
+        $commandTester = new CommandTester($command);
+        $commandTester->execute([]);
+
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
+        $entityManager->clear();
+
+        $message = $entityManager
+            ->getRepository(\App\Entity\Message::class)
+            ->find($id);
+
+        $this->assertNotNull($message->getProcessedAt());
     }
 }
