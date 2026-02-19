@@ -114,7 +114,6 @@ final class MessageApiTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $id = $data['id'];
 
-        // Now fetch it by ID
         $this->client->request('GET', '/api/messages/' . $id);
 
         $this->assertResponseIsSuccessful();
@@ -123,5 +122,55 @@ final class MessageApiTest extends WebTestCase
 
         $this->assertSame($id, $responseData['id']);
         $this->assertSame('Single Message', $responseData['subject']);
+    }
+
+    public function testUpdateMessage(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/messages',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'subject' => 'Original',
+                'message' => 'Original message',
+                'date' => '2025-01-01 10:00:00',
+                'senderName' => 'John',
+                'type' => 'incoming'
+            ])
+        );
+
+        $created = json_decode($this->client->getResponse()->getContent(), true);
+        $id = $created['id'];
+
+        $this->client->request(
+            'PUT',
+            '/api/messages/' . $id,
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'subject' => 'Updated',
+                'message' => 'Updated message',
+                'date' => '2025-01-02 12:00:00',
+                'senderName' => 'Jane',
+                'type' => 'outgoing'
+            ])
+        );
+
+        $this->assertResponseIsSuccessful();
+
+        $updated = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame('Updated', $updated['subject']);
+        $this->assertSame('outgoing', $updated['type']);
+
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
+        $message = $entityManager
+            ->getRepository(\App\Entity\Message::class)
+            ->find($id);
+
+        $this->assertSame('Updated', $message->getSubject());
     }
 }
