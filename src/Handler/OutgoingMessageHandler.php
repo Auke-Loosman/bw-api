@@ -15,6 +15,6 @@ final class OutgoingMessageHandler implements MessageHandlerInterface
 
     public function handle(Message $message): void
     {
-        $message->setType('outgoing');
+        $message->setProcessedAt(new \DateTimeImmutable());
     }
 }

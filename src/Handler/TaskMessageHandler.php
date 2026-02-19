@@ -15,6 +15,6 @@ final class TaskMessageHandler implements MessageHandlerInterface
 
     public function handle(Message $message): void
     {
-        $message->setType('task');
+        $message->setProcessedAt(new \DateTimeImmutable());
     }
 }

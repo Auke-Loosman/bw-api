@@ -15,7 +15,6 @@ final class IncomingMessageHandler implements MessageHandlerInterface
 
     public function handle(Message $message): void
     {
-        // Example logic
-        $message->setType('incoming');
+        $message->setProcessedAt(new \DateTimeImmutable());
     }
 }
