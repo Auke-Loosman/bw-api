@@ -15,6 +15,12 @@ final class MessageService
         private readonly MessageHandlerRegistry $registry
     ) {}
 
+    public function process(Message $message): void
+    {
+        $this->registry->handle($message);
+        $this->em->flush();
+    }
+
     public function create(array $data): Message
     {
         $message = new Message();
@@ -23,8 +29,6 @@ final class MessageService
         $message->setDate(new \DateTimeImmutable($data['date']));
         $message->setSenderName($data['senderName']);
         $message->setType($data['type']);
-
-        $this->registry->handle($message);
 
         $this->em->persist($message);
         $this->em->flush();
