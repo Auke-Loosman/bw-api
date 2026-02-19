@@ -31,6 +31,9 @@ class Message
     #[ORM\Column(length: 255)]
     private ?string $type = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $processedAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -94,5 +97,15 @@ class Message
         $this->type = $type;
 
         return $this;
+    }
+
+    public function getProcessedAt(): ?\DateTimeImmutable
+    {
+        return $this->processedAt;
+    }
+
+    public function setProcessedAt(?\DateTimeImmutable $processedAt): void
+    {
+        $this->processedAt = $processedAt;
     }
 }
