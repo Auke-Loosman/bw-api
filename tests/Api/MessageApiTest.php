@@ -47,4 +47,36 @@ final class MessageApiTest extends WebTestCase
         $this->assertNotNull($message);
         $this->assertSame('Test Subject', $message->getSubject());
     }
+
+    public function testGetAllMessages(): void
+    {
+        $client = static::createClient();
+
+        // First create one message
+        $client->request(
+            'POST',
+            '/api/messages',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'subject' => 'Message 1',
+                'message' => 'Test',
+                'date' => '2025-01-01 10:00:00',
+                'senderName' => 'John',
+                'type' => 'incoming'
+            ])
+        );
+
+        // Now fetch all
+        $client->request('GET', '/api/messages');
+
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($client->getResponse()->getContent(), true);
+
+        $this->assertIsArray($data);
+        $this->assertCount(1, $data);
+        $this->assertSame('Message 1', $data[0]['subject']);
+    }
 }
