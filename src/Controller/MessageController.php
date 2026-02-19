@@ -69,4 +69,30 @@ final class MessageController
             'type' => $message->getType(),
         ]);
     }
+
+    #[Route('/api/messages/{id}', name: 'app_message_update', methods: ['PUT'])]
+    public function update(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $message = $em->getRepository(Message::class)->find($id);
+
+        if (!$message) {
+            return new JsonResponse(null, 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        $message->setSubject($data['subject']);
+        $message->setMessage($data['message']);
+        $message->setDate(new \DateTimeImmutable($data['date']));
+        $message->setSenderName($data['senderName']);
+        $message->setType($data['type']);
+
+        $em->flush();
+
+        return new JsonResponse([
+            'id' => $message->getId(),
+            'subject' => $message->getSubject(),
+            'type' => $message->getType(),
+        ]);
+    }
 }
