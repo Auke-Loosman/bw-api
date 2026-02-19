@@ -8,10 +8,28 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class MessageApiTest extends WebTestCase
 {
+    private $client;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        static::ensureKernelShutdown();
+        $this->client = static::createClient();
+
+        $entityManager = static::getContainer()
+            ->get('doctrine')
+            ->getManager();
+
+        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($entityManager);
+        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
+
+        $schemaTool->dropSchema($metadata);
+        $schemaTool->createSchema($metadata);
+    }
+
     public function testCreateMessage(): void
     {
-        $client = static::createClient();
-
         $payload = [
             'subject' => 'Test Subject',
             'message' => 'Test Message',
@@ -20,7 +38,7 @@ final class MessageApiTest extends WebTestCase
             'type' => 'incoming'
         ];
 
-        $client->request(
+        $this->client->request(
             'POST',
             '/api/messages',
             [],
@@ -31,14 +49,13 @@ final class MessageApiTest extends WebTestCase
 
         $this->assertResponseStatusCodeSame(201);
 
-        $data = json_decode($client->getResponse()->getContent(), true);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertIsArray($data);
         $this->assertArrayHasKey('id', $data);
         $this->assertSame('Test Subject', $data['subject']);
 
-        self::bootKernel();
-        $entityManager = self::getContainer()->get('doctrine')->getManager();
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
 
         $message = $entityManager
             ->getRepository(\App\Entity\Message::class)
@@ -50,10 +67,7 @@ final class MessageApiTest extends WebTestCase
 
     public function testGetAllMessages(): void
     {
-        $client = static::createClient();
-
-        // First create one message
-        $client->request(
+        $this->client->request(
             'POST',
             '/api/messages',
             [],
@@ -68,12 +82,11 @@ final class MessageApiTest extends WebTestCase
             ])
         );
 
-        // Now fetch all
-        $client->request('GET', '/api/messages');
+        $this->client->request('GET', '/api/messages');
 
         $this->assertResponseIsSuccessful();
 
-        $data = json_decode($client->getResponse()->getContent(), true);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertIsArray($data);
         $this->assertCount(1, $data);

@@ -33,4 +33,21 @@ final class MessageController
             'type' => $message->getType(),
         ], 201);
     }
+
+    #[Route('/api/messages', name: 'app_message_index', methods: ['GET'])]
+    public function index(EntityManagerInterface $em): JsonResponse
+    {
+        $messages = $em->getRepository(Message::class)->findAll();
+
+        $data = array_map(
+            fn (Message $message) => [
+                'id' => $message->getId(),
+                'subject' => $message->getSubject(),
+                'type' => $message->getType(),
+            ],
+            $messages
+        );
+
+        return new JsonResponse($data);
+    }
 }
