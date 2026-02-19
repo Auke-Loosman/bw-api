@@ -6,11 +6,13 @@ namespace App\Service;
 
 use App\Entity\Message;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Registry\MessageHandlerRegistry;
 
 final class MessageService
 {
     public function __construct(
-        private readonly EntityManagerInterface $em
+        private readonly EntityManagerInterface $em,
+        private readonly MessageHandlerRegistry $registry
     ) {}
 
     public function create(array $data): Message
@@ -21,6 +23,8 @@ final class MessageService
         $message->setDate(new \DateTimeImmutable($data['date']));
         $message->setSenderName($data['senderName']);
         $message->setType($data['type']);
+
+        $this->registry->handle($message);
 
         $this->em->persist($message);
         $this->em->flush();
