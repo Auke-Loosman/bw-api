@@ -54,6 +54,11 @@ final class MessageService
         return $this->repository()->find($id);
     }
 
+    public function findByType(string $type): array
+    {
+        return $this->repository()->findBy(['type' => $type]);
+    }
+
     public function update(Message $message, array $data): Message
     {
         $message->setSubject($data['subject']);

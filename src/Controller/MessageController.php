@@ -51,9 +51,15 @@ final class MessageController
     }
 
     #[Route('/api/messages', name: 'app_message_index', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $messages = $this->service->findAll();
+        $type = $request->query->get('type');
+
+        if ($type) {
+            $messages = $this->service->findByType($type);
+        } else {
+            $messages = $this->service->findAll();
+        }
 
         $data = array_map(
             fn (Message $message) => [
